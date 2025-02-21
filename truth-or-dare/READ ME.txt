@@ -1,0 +1,11 @@
+Welcome to the superior truth or dare game. 
+
+To start, open the index.html file.
+
+To load the game data, click the 'load file' button in the bottom right, 
+locate the data.json file in the root of the file you downloaded, and click open. 
+This should automatically load in all the data. 
+
+When your done, make sure to click save to ensure everything is properly stored for later!
+
+If you need a reminder, click the help button in the bottom right

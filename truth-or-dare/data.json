@@ -1,0 +1,335 @@
+{
+  "players": [
+    {
+      "id": "1740156281168",
+      "name": "James",
+      "score": 0,
+      "questionHistory": {
+        "1740156564295": 1,
+        "1740156582279": 1,
+        "1740156577192": 1,
+        "1740156579239": 2,
+        "1740156573207": 1,
+        "1740156569335": 1,
+        "1740156599744": 1,
+        "1740156558543": 1
+      }
+    },
+    {
+      "id": "1740156283610",
+      "name": "Luca",
+      "score": 0,
+      "questionHistory": {}
+    },
+    {
+      "id": "1740156286932",
+      "name": "Channing",
+      "score": 0,
+      "questionHistory": {}
+    },
+    {
+      "id": "1740156289456",
+      "name": "Jess",
+      "score": 0,
+      "questionHistory": {}
+    },
+    {
+      "id": "1740156293821",
+      "name": "Daniel",
+      "score": 0,
+      "questionHistory": {}
+    },
+    {
+      "id": "1740156295835",
+      "name": "Andrew",
+      "score": 0,
+      "questionHistory": {}
+    },
+    {
+      "id": "1740156299844",
+      "name": "Mary",
+      "score": 0,
+      "questionHistory": {}
+    }
+  ],
+  "packs": [
+    {
+      "id": "1740156319798",
+      "name": "Kinky",
+      "description": "A pack for those late nights with friends",
+      "questions": [
+        {
+          "id": "1740156558543",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Kiss the person to the left for a minute"
+        },
+        {
+          "id": "1740156561287",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Eskimo Kiss the person 2 seats down for 30 seconds"
+        },
+        {
+          "id": "1740156564295",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Massage the person 2 seats to your right for a minute anywhere they choose"
+        },
+        {
+          "id": "1740156569335",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Get blind folded and guess who's touching you"
+        },
+        {
+          "id": "1740156571287",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Jiggle someone's ass for a 3 second"
+        },
+        {
+          "id": "1740156573207",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Get slapped on the ass with only underwear to the person on your right. The harder they slap, the more points you earn"
+        },
+        {
+          "id": "1740156577192",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Suck someone's toes"
+        },
+        {
+          "id": "1740156579239",
+          "type": "truth",
+          "category": "Casual",
+          "text": "Who would you smash in this room"
+        },
+        {
+          "id": "1740156582279",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Grind a long object"
+        },
+        {
+          "id": "1740156584713",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Grind the person 3 seats down"
+        },
+        {
+          "id": "1740156587527",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Lick someone entire leg twice romantically"
+        },
+        {
+          "id": "1740156591063",
+          "type": "dare",
+          "category": "Advanced",
+          "text": "Kiss someones crotch"
+        },
+        {
+          "id": "1740156593679",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Suck the person 2 to your lefts finger sexualy for 10s"
+        },
+        {
+          "id": "1740156595623",
+          "type": "dare",
+          "category": "Advacned",
+          "text": "Oil your chest"
+        },
+        {
+          "id": "1740156597935",
+          "type": "dare",
+          "category": "Advanced",
+          "text": "Kiss the person to your right for 5 seconds romantically"
+        },
+        {
+          "id": "1740156599744",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Let someone slap you rlly hard of your choice"
+        }
+      ]
+    },
+    {
+      "id": "1740156335505",
+      "name": "Family Friendly",
+      "description": "A casual pack for familys & young kids",
+      "questions": [
+        {
+          "id": "1740156606735",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Drink 8 cups of water"
+        }
+      ]
+    },
+    {
+      "id": "1740156408099",
+      "name": "A bit of both",
+      "description": "A mix of SFW & NSFW Questions",
+      "questions": [
+        {
+          "id": "1740156623968",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Cuddle for a minute"
+        },
+        {
+          "id": "1740156625503",
+          "type": "truth",
+          "category": "Intermediate",
+          "text": "Share a intimate feeling you have for someone if thos room"
+        },
+        {
+          "id": "1740156626919",
+          "type": "dare",
+          "category": "advanced",
+          "text": "Kiss the person to the left for a minute"
+        },
+        {
+          "id": "1740156628551",
+          "type": "dare",
+          "category": "advanced",
+          "text": "Eskimo Kiss the person 2 seats down for 30 seconds"
+        },
+        {
+          "id": "1740156632616",
+          "type": "dare",
+          "category": "intermediate",
+          "text": "Massage someone for a minute anywhere they choose"
+        },
+        {
+          "id": "1740156634001",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Get blind folded and guess who's touching you"
+        },
+        {
+          "id": "1740156635576",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Jiggle someone's ass for a 3 second"
+        },
+        {
+          "id": "1740156637087",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Get slapped on the ass with only underwear to the person on your right. The harder they slap, the more points you earn"
+        },
+        {
+          "id": "1740156638615",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Suck someone's toes"
+        },
+        {
+          "id": "1740156640079",
+          "type": "truth",
+          "category": "Intermediate",
+          "text": "Who would you smash in this room"
+        },
+        {
+          "id": "1740156641568",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Grind a long object"
+        },
+        {
+          "id": "1740156643279",
+          "type": "dare",
+          "category": "Intermediate",
+          "text": "Grind the person 3 seats down"
+        },
+        {
+          "id": "1740156644800",
+          "type": "dare",
+          "category": "intermediate",
+          "text": "Lick someone entire leg twice romantically"
+        },
+        {
+          "id": "1740156646335",
+          "type": "dare",
+          "category": "advanced",
+          "text": "Kiss someones crotch"
+        },
+        {
+          "id": "1740156647807",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Suck the person 2 to your lefts finger sexualy for 10s"
+        },
+        {
+          "id": "1740156649544",
+          "type": "dare",
+          "category": "Advacned",
+          "text": "Oil your chest"
+        },
+        {
+          "id": "1740156651215",
+          "type": "dare",
+          "category": "advanced",
+          "text": "Kiss the person to your right for 5 seconds romantically"
+        },
+        {
+          "id": "1740156652847",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Let someone slap you rlly hard of your choice"
+        },
+        {
+          "id": "1740156654592",
+          "type": "dare",
+          "category": "casual",
+          "text": "Drink 8 cups of water"
+        }
+      ]
+    },
+    {
+      "id": "1740156504979",
+      "name": "Friends",
+      "description": "A Slightly more advanced pack for chilling with your friends",
+      "questions": [
+        {
+          "id": "1740156517079",
+          "type": "dare",
+          "category": "intermediate",
+          "text": "Cuddle for a minute"
+        },
+        {
+          "id": "1740156525144",
+          "type": "dare",
+          "category": "Casual",
+          "text": "Massage someone for a minute anywhere they choose"
+        },
+        {
+          "id": "1740156537800",
+          "type": "truth",
+          "category": "Advanced",
+          "text": "Who would you smash in this room"
+        },
+        {
+          "id": "1740156545151",
+          "type": "dare",
+          "category": "intermediate",
+          "text": "Let someone slap you rlly hard of your choice"
+        },
+        {
+          "id": "1740156612968",
+          "type": "dare",
+          "category": "casual",
+          "text": "Drink 8 cups of water"
+        }
+      ]
+    }
+  ],
+  "themeSettings": {
+    "mode": "default",
+    "bgAnim": "spin"
+  }
+}

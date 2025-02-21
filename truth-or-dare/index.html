@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Truth or Dare Game - Standard Loading/Saving (v7.4.3)</title>
+  <style>
+    /* ---------- Global Variables & Theme Defaults ---------- */
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --sidebar-bg: #f0f0f0;
+      --sidebar-text: #000000;
+      --sidebar-border: #ccc;
+      --sidebar-hover: #ddd;
+      --accent-color: #007bff;
+      --button-text: #ffffff;
+    }
+    body.default-mode   { --bg-color: #222222; --text-color: #eeeeee; --sidebar-bg: #333333; --sidebar-text: #ffffff; --sidebar-border: #444444; --sidebar-hover: #555555; }
+    body.light-mode     { }
+    body.ocean-mode     { --bg-color: #a8d0e6; --text-color: #03396c; --sidebar-bg: #f9f7f7; --sidebar-text: #03396c; --sidebar-border: #ccc; --sidebar-hover: #e1e1e1; --accent-color: #005b96; }
+    body.forest-mode    { --bg-color: #2e4d2e; --text-color: #d0e1d4; --sidebar-bg: #3c5c3c; --sidebar-text: #d0e1d4; --sidebar-border: #556b2f; --sidebar-hover: #4f7942; --accent-color: #8fbc8f; }
+    body.sunset-mode    { --bg-color: #ffcccb; --text-color: #b22222; --sidebar-bg: #ffe4e1; --sidebar-text: #b22222; --sidebar-border: #cd5c5c; --sidebar-hover: #f08080; --accent-color: #ff4500; }
+    body.royal-mode     { --bg-color: #4b0082; --text-color: #e6e6fa; --sidebar-bg: #483d8b; --sidebar-text: #e6e6fa; --sidebar-border: #9370db; --sidebar-hover: #8a2be2; --accent-color: #663399; }
+    body.curvy-mode     { --bg-color: #1c1c1c; --text-color: #f5f5f5; --sidebar-bg: #2c2c2c; --sidebar-text: #f5f5f5; --sidebar-border: #444; --sidebar-hover: #333; --accent-color: #ff69b4; }
+    body.traditional-mode { --bg-color: #000000; --text-color: #ffffff; --sidebar-bg: #111111; --sidebar-text: #ffffff; --sidebar-border: #444; --sidebar-hover: #222; --accent-color: #ff8c00; }
+    body.retro-mode     { --bg-color: #000; --text-color: #0f0; --sidebar-bg: #111; --sidebar-text: #0f0; --sidebar-border: #333; --sidebar-hover: #222; --accent-color: #ff00ff; font-family: "Courier New", Courier, monospace; image-rendering: pixelated; }
+    
+    /* ---------- Base Layout & Styling ---------- */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #container { display: flex; height: 100vh; }
+    /* Sidebar */
+    #sidebar {
+      width: 200px;
+      background-color: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      padding-bottom: 20px;
+    }
+    #sidebar ul { list-style: none; padding: 0; margin: 0; }
+    #sidebar li {
+      padding: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+    #sidebar li:hover { background-color: var(--sidebar-hover); }
+    /* Divider */
+    #sidebar hr { margin: 10px 0; border: 1px solid var(--accent-color); }
+    /* Content Area */
+    #content { flex-grow: 1; padding: 20px; overflow-y: auto; }
+    .tab-content { display: none; }
+    .active-tab { display: block; }
+    h1, h2, h3, h4 { margin-top: 0; }
+    hr { margin: 20px 0; }
+    /* Tables & Inputs */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 8px; text-align: left; }
+    input[type="text"], input[type="number"], textarea, select {
+      padding: 5px;
+      margin: 5px 0;
+      width: 100%;
+      max-width: 300px;
+    }
+    /* ---------- Background Animation ---------- */
+    #bgAnimation {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      background: var(--accent-color);
+      opacity: 0.1;
+      transition: background 0.5s, opacity 0.5s;
+    }
+    .bgAnim-spin { animation: bgSpin 10s linear infinite; }
+    .bgAnim-side { animation: bgSide 10s linear infinite; }
+    .bgAnim-down { animation: bgDown 10s linear infinite; }
+    .bgAnim-shuffle { animation: bgShuffle 10s linear infinite; }
+    @keyframes bgSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes bgSide { from { transform: translateX(0); } to { transform: translateX(1000px); } }
+    @keyframes bgDown { from { transform: translateY(0); } to { transform: translateY(1000px); } }
+    @keyframes bgShuffle {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(500px, 200px); }
+      50% { transform: translate(-300px, 400px); }
+      75% { transform: translate(200px, -500px); }
+      100% { transform: translate(0, 0); }
+    }
+    /* ---------- File & Help Controls ---------- */
+    #versionBox, #fileControls, #helpControls, #helpMessage {
+      position: fixed;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.9em;
+      z-index: 1000;
+    }
+    #versionBox { top: 10px; right: 10px; }
+    #fileControls { bottom: 10px; right: 10px; }
+    #helpControls { bottom: 10px; left: 10px; }
+    #helpMessage { bottom: 50px; left: 10px; display: none; max-width: 300px; }
+    /* ---------- Confirmation Message ---------- */
+    #confirmationMessage {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+    /* ---------- Update Logs Grid ---------- */
+    .update-buttons-container { text-align: center; margin-bottom: 40px; }
+    .update-button {
+      display: inline-block;
+      width: 150px;
+      height: 150px;
+      margin: 10px;
+      border: 2px solid var(--accent-color);
+      border-radius: 8px;
+      cursor: pointer;
+      vertical-align: top;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    .update-button h3 { color: black; margin-top: 45px; font-size: 1.1em; }
+    .update-button:hover { transform: scale(1.05); }
+    .update-v3 { background-color: #a8d8ea; }
+    .update-v2 { background-color: #b2e1c6; }
+    .update-v1 { background-color: #ffd1a4; }
+    /* ---------- Update Logs Edit Section ---------- */
+    #updateEditSection { border: 1px solid #aaa; padding: 10px; margin-bottom: 20px; background: #f9f9f9; }
+    .update-detail { color: black; }
+    /* ---------- Top Rankings Block ---------- */
+    #topRankings {
+      border: 2px solid var(--accent-color);
+      padding: 10px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      background: rgba(0, 123, 255, 0.1);
+    }
+    #topRankings h3 { margin: 0 0 10px 0; }
+    #topRankings small { font-size: 0.8em; }
+  </style>
+</head>
+<body class="default-mode">
+  <!-- Hidden file input for loading data -->
+  <input type="file" id="loadFileInput" style="display:none;" accept=".json">
+  <!-- Main App Container -->
+  <div id="mainApp">
+    <!-- Version Box -->
+    <div id="versionBox">v7.4.3</div>
+    <!-- Background Animation -->
+    <div id="bgAnimation" class="bgAnim-spin"></div>
+    <!-- Confirmation Message -->
+    <div id="confirmationMessage"></div>
+    
+    <div id="container">
+      <!-- Sidebar Navigation -->
+      <div id="sidebar">
+        <ul>
+          <li onclick="showTab('mainTab')">Main</li>
+          <li onclick="showTab('rankingTab')">Ranking</li>
+          <hr>
+          <li onclick="adminTabAccess()">Admin</li>
+          <li onclick="showTab('customisationTab')">Customisation</li>
+          <li onclick="showTab('updateLogsTab')">Update Logs</li>
+          <li onclick="showTab('comingSoonTab')">Coming Soon</li>
+        </ul>
+      </div>
+      
+      <!-- Content Area -->
+      <div id="content">
+        <!-- Main Tab -->
+        <div id="mainTab" class="tab-content active-tab">
+          <!-- Top Rankings Block -->
+          <div id="topRankings" onclick="showTab('rankingTab')">
+            <h3>Top Rankings</h3>
+            <ol id="topRankingsList"></ol>
+            <small>Click to view full rankings</small>
+          </div>
+          <h1>Truth or Dare Game</h1>
+          <div>
+            <label for="currentPlayerSelect"><strong>Select Player:</strong></label>
+            <select id="currentPlayerSelect"></select>
+          </div>
+          <div>
+            <label for="packSelect"><strong>Select Pack:</strong></label>
+            <select id="packSelect">
+              <option value="">All Packs</option>
+            </select>
+          </div>
+          <div>
+            <p><strong>Choose Type:</strong></p>
+            <label><input type="radio" name="tdType" value="truth" checked> Truth</label>
+            <label><input type="radio" name="tdType" value="dare"> Dare</label>
+          </div>
+          <div>
+            <label for="levelSelect"><strong>Choose Level:</strong></label>
+            <select id="levelSelect">
+              <option value="Random">Random</option>
+              <option value="Casual">Casual</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div>
+            <button id="getQuestionBtn">Get Question</button>
+          </div>
+          <div id="questionDisplay" style="margin-top:15px; font-size:1.2em; font-weight:bold;"></div>
+          <div id="responseButtons" style="display:none; margin-top:10px;">
+            <button id="completedBtn">Completed</button>
+            <button id="notCompletedBtn">Not Completed</button>
+            <button id="skipBtn">Skip</button>
+          </div>
+          <hr>
+          <div>
+            <h2>Adjust Player Score</h2>
+            <div>
+              <label for="adjustPlayerSelect">Select Player:</label>
+              <select id="adjustPlayerSelect"></select>
+            </div>
+            <div>
+              <input type="number" id="scoreAdjustment" value="0">
+            </div>
+            <div>
+              <button id="addScoreBtn">Add Score</button>
+              <button id="subtractScoreBtn">Subtract Score</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Admin Tab -->
+        <div id="adminTab" class="tab-content">
+          <h2>Admin Panel</h2>
+          <!-- Player Trackers -->
+          <div id="playersAdmin">
+            <h3>Player Trackers</h3>
+            <div>
+              <h4>Add Player</h4>
+              <label for="newPlayerName"><strong>Name:</strong></label>
+              <input type="text" id="newPlayerName">
+              <button id="addPlayerBtn">Add Player</button>
+            </div>
+            <hr>
+            <div>
+              <h4>Existing Players</h4>
+              <table id="playerTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <hr>
+          <!-- Questions Log -->
+          <div id="questionsAdmin">
+            <h3>Questions Log</h3>
+            <div>
+              <h4>Search and Filter Questions</h4>
+              <input type="text" id="questionSearch" placeholder="Search questions...">
+              <div>
+                <label for="filterType">Type:</label>
+                <select id="filterType">
+                  <option value="">All</option>
+                  <option value="truth">Truth</option>
+                  <option value="dare">Dare</option>
+                </select>
+                <label for="filterCategory">Difficulty:</label>
+                <select id="filterCategory">
+                  <option value="">All</option>
+                  <option value="Casual">Casual</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+                <label for="filterPack">Pack:</label>
+                <select id="filterPack">
+                  <option value="">All</option>
+                </select>
+                <button id="filterBtn">Apply Filters</button>
+              </div>
+            </div>
+            <hr>
+            <div>
+              <h4>Add Question</h4>
+              <div>
+                <p><strong>Type:</strong></p>
+                <label><input type="radio" name="newQuestionType" value="truth" checked> Truth</label>
+                <label><input type="radio" name="newQuestionType" value="dare"> Dare</label>
+              </div>
+              <div>
+                <label for="newQuestionCategory"><strong>Difficulty:</strong></label>
+                <select id="newQuestionCategory">
+                  <option value="Casual">Casual</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+              <div>
+                <label for="newQuestionText"><strong>Question:</strong></label><br>
+                <textarea id="newQuestionText" rows="3"></textarea>
+              </div>
+              <button id="addQuestionBtn">Add Question</button>
+            </div>
+            <hr>
+            <div>
+              <h4>Existing Questions</h4>
+              <table id="questionTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Difficulty</th>
+                    <th>Question</th>
+                    <th>Pack</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <hr>
+          <!-- Packs Management -->
+          <div id="packsAdmin">
+            <h3>Manage Packs</h3>
+            <div>
+              <h4>Add Pack</h4>
+              <label for="newPackNameAdmin"><strong>Name:</strong></label>
+              <input type="text" id="newPackNameAdmin">
+              <br>
+              <label for="newPackDescriptionAdmin"><strong>Description:</strong></label>
+              <textarea id="newPackDescriptionAdmin" rows="2"></textarea>
+              <br>
+              <button id="addPackBtnAdmin">Add Pack</button>
+            </div>
+            <hr>
+            <div>
+              <h4>Existing Packs</h4>
+              <table id="packTableAdmin">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th># Questions</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <hr>
+            <div>
+              <h4>Import Questions from Excel</h4>
+              <input type="file" id="excelImport">
+              <button id="importExcelBtn">Import</button>
+              <p>Excel format: Column A: Question, Column B: Type (Truth/Dare), Column C: Difficulty, Column D: Pack</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Ranking Tab -->
+        <div id="rankingTab" class="tab-content">
+          <h2>Player Rankings</h2>
+          <table id="rankingTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        
+        <!-- Customisation Tab -->
+        <div id="customisationTab" class="tab-content">
+          <h2>Customisation</h2>
+          <div>
+            <h3>Select Theme</h3>
+            <label><input type="radio" name="themeMode" value="default" checked> Default Mode</label>
+            <label><input type="radio" name="themeMode" value="light"> Light Mode</label>
+            <label><input type="radio" name="themeMode" value="ocean"> Ocean</label>
+            <label><input type="radio" name="themeMode" value="forest"> Forest</label>
+            <label><input type="radio" name="themeMode" value="sunset"> Sunset</label>
+            <label><input type="radio" name="themeMode" value="royal"> Royal</label>
+            <label><input type="radio" name="themeMode" value="curvy"> Curvy</label>
+            <label><input type="radio" name="themeMode" value="traditional"> Traditional</label>
+            <label><input type="radio" name="themeMode" value="retro"> Retro</label>
+          </div>
+          <hr>
+          <div>
+            <h3>Background Animation</h3>
+            <label><input type="radio" name="bgAnim" value="spin" checked> Spin</label>
+            <label><input type="radio" name="bgAnim" value="side"> Side</label>
+            <label><input type="radio" name="bgAnim" value="down"> Down</label>
+            <label><input type="radio" name="bgAnim" value="shuffle"> Shuffle</label>
+            <label><input type="radio" name="bgAnim" value="none"> None</label>
+          </div>
+        </div>
+        
+        <!-- Update Logs Tab -->
+        <div id="updateLogsTab" class="tab-content">
+          <h2>Update Logs</h2>
+          <button id="editUpdatesBtn">Edit Updates</button>
+          <div id="updateEditSection" style="display:none;">
+            <textarea id="updateEditTextarea" style="width:100%; height:300px;"></textarea><br>
+            <button id="saveUpdatesBtn">Save Updates</button>
+            <button id="cancelUpdatesBtn">Cancel</button>
+          </div>
+          <div id="updateLogsContainer"></div>
+        </div>
+        
+        <!-- Coming Soon Tab -->
+        <div id="comingSoonTab" class="tab-content">
+          <h2>Coming Soon</h2>
+          <p><strong>Coming Soon:</strong> More exciting features and improvements are on the way!</p>
+        </div>
+      </div>
+    </div>
+    
+    <div id="fileControls">
+      <button id="loadDataBtn">Load Data File</button>
+      <button id="saveDataBtn">Save Data File</button>
+    </div>
+    <div id="helpControls">
+      <button id="helpBtn">Help</button>
+    </div>
+    <div id="helpMessage">
+      <p><strong>Welcome to Truth or Dare!</strong></p>
+      <p>To load game data, click "Load Data File" (bottom right). To save, click "Save Data File".</p>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script>
+    /***** Global Data *****/
+    let appData = {
+      players: [],
+      packs: [],
+      themeSettings: { mode: "default", bgAnim: "spin" }
+    };
+    let updateLogsData = {
+      "v7": [
+        { version: "7.4", text: "Locked player tracker & questions log behind admin tab", color: "#FF5733" },
+        { version: "7.3", text: "Added top rankings on main page", color: "#FF5733" },
+        { version: "7.2", text: "Improved pack & question adding", color: "#a8d8ea" },
+        { version: "7.1.1", text: "Packs patch", color: "#a8d8ea" },
+        { version: "7.1", text: "Added Packs", color: "#a8d8ea" },
+        { version: "7.0", text: "Overhauled question adding", color: "#a8d8ea" }
+      ],
+      "v6": [
+        { version: "6.0", text: "Removed the session function.", color: "#a8d8ea" }
+      ],
+      "v5": [
+        { version: "5.0", text: "Added Session Function.", color: "#b2e1c6" }
+      ],
+      "v4": [
+        { version: "4.0", text: "Added Updates log & coming soon pages", color: "#ffd1a4" }
+      ],
+      "v3": [
+        { version: "3.2", text: "Balanced ranking system", color: "#a8d8ea" },
+        { version: "3.1.1", text: "Questions patch", color: "#a8d8ea" },
+        { version: "3.1", text: "Fixed question addition and improved performance.", color: "#a8d8ea" },
+        { version: "3.0", text: "Added the points & ranking system.", color: "#a8d8ea" }
+      ],
+      "v2": [
+        { version: "2.1", text: "Improved load/save functionality.", color: "#b2e1c6" },
+        { version: "2.0", text: "UI Overhaul", color: "#b2e1c6" }
+      ],
+      "v1": [
+        { version: "1.0", text: "The original game. No bells & whistles, just buggy code.", color: "#ffd1a4" }
+      ]
+    };
+    const updatePassword = "You Can't Guess The Password";
+    let dataFileHandle = null;
+    let adminUnlocked = false;
+    
+    /***** Helper: Rank Value Mapping *****/
+    function rankValue(rank) {
+      const mapping = {
+        "Unranked": 0,
+        "Iron": 1,
+        "Bronze": 2,
+        "Silver": 3,
+        "Gold": 4,
+        "Platinum": 5,
+        "Diamond": 6,
+        "Grandmaster": 7,
+        "Celestial": 8,
+        "Eternity": 9,
+        "One Above All": 10,
+        "Under the One Above All": 11
+      };
+      return mapping[rank] || 0;
+    }
+    
+    /***** Notification for Rank Up/Down *****/
+    function showNotification(msg) {
+      const notif = document.createElement("div");
+      notif.textContent = msg;
+      notif.style.position = "fixed";
+      notif.style.top = "50px";
+      notif.style.left = "50%";
+      notif.style.transform = "translateX(-50%)";
+      notif.style.background = "#28a745";
+      notif.style.color = "#fff";
+      notif.style.padding = "10px 20px";
+      notif.style.borderRadius = "5px";
+      notif.style.zIndex = "2000";
+      document.body.appendChild(notif);
+      setTimeout(() => { document.body.removeChild(notif); }, 3000);
+    }
+    
+    /***** Admin Tab Access *****/
+    function adminTabAccess() {
+      if (adminUnlocked) {
+        showTab("adminTab");
+        return;
+      }
+      const pwd = prompt("Enter admin password:");
+      if (pwd === updatePassword) {
+        adminUnlocked = true;
+        showTab("adminTab");
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+    
+    /***** Confirmation Message Helper *****/
+    function showConfirmation(msg) {
+      const cm = document.getElementById("confirmationMessage");
+      cm.textContent = msg;
+      cm.style.display = "block";
+      setTimeout(() => { cm.style.display = "none"; }, 2000);
+    }
+    
+    /***** Standard Load/Save Functions *****/
+    async function loadDataFile() {
+      if (window.showOpenFilePicker) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }]
+          });
+          dataFileHandle = handle;
+          const file = await handle.getFile();
+          const fileText = await file.text();
+          const fileObj = JSON.parse(fileText);
+          appData = Object.assign({ players: [], packs: [], themeSettings: { mode: "default", bgAnim: "spin" } }, fileObj);
+          updateAllDisplays();
+          applyThemeSettings();
+          showConfirmation("Data file loaded successfully!");
+        } catch (err) {
+          console.error("Error loading data file:", err);
+        }
+      } else {
+        document.getElementById("loadFileInput").click();
+      }
+    }
+    
+    document.getElementById("loadFileInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const fileObj = JSON.parse(e.target.result);
+          appData = Object.assign({ players: [], packs: [], themeSettings: { mode: "default", bgAnim: "spin" } }, fileObj);
+          updateAllDisplays();
+          applyThemeSettings();
+          showConfirmation("Data file loaded successfully!");
+        } catch (err) {
+          console.error("Error parsing file:", err);
+        }
+      };
+      reader.readAsText(file);
+    });
+    
+    async function saveDataFile() {
+      if (!dataFileHandle) { console.error("No file handle available."); return; }
+      try {
+        const writable = await dataFileHandle.createWritable();
+        await writable.write(JSON.stringify(appData, null, 2));
+        await writable.close();
+        showConfirmation("Data saved successfully!");
+      } catch (err) {
+        console.error("Error saving data:", err);
+      }
+    }
+    
+    /***** Update Logs Helper Functions *****/
+    function convertUpdateLogsToText() {
+      const groups = ["v7", "v6", "v5", "v4", "v3", "v2", "v1"];
+      let lines = [];
+      groups.forEach(group => {
+        if (updateLogsData[group] && updateLogsData[group].length) {
+          lines.push(group + ":");
+          updateLogsData[group].forEach(entry => {
+            lines.push(`${entry.version}|${entry.text}|${entry.color}`);
+          });
+          lines.push("");
+        }
+      });
+      return lines.join("\n");
+    }
+    function parseUpdateLogsText(text) {
+      const lines = text.split("\n");
+      let newData = {};
+      let currentGroup = null;
+      lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        if (line.endsWith(":")) {
+          currentGroup = line.slice(0, -1).trim();
+          newData[currentGroup] = [];
+        } else if (currentGroup) {
+          const parts = line.split("|");
+          if (parts.length >= 2) {
+            let version = parts[0].trim();
+            let entryText = parts[1].trim();
+            let color = parts.length >= 3 ? parts[2].trim() : "";
+            if (!color) {
+              if (currentGroup === "v7") color = "#a8d8ea";
+              else if (currentGroup === "v6") color = "#a8d8ea";
+              else if (currentGroup === "v5") color = "#b2e1c6";
+              else if (currentGroup === "v4") color = "#ffd1a4";
+              else if (currentGroup === "v3") color = "#a8d8ea";
+              else if (currentGroup === "v2") color = "#b2e1c6";
+              else if (currentGroup === "v1") color = "#ffd1a4";
+              else color = "#ccc";
+            }
+            newData[currentGroup].push({ version, text: entryText, color });
+          }
+        }
+      });
+      return newData;
+    }
+    
+    /***** UI Update Helpers *****/
+    function showTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active-tab"));
+      document.getElementById(tabId).classList.add("active-tab");
+      updateAllDisplays();
+    }
+    function updatePlayerDropdowns() {
+      const selects = [document.getElementById("currentPlayerSelect"), document.getElementById("adjustPlayerSelect")];
+      selects.forEach(select => {
+        const selectedValue = select.value;
+        select.innerHTML = "";
+        appData.players.forEach(player => {
+          const opt = document.createElement("option");
+          opt.value = player.id;
+          opt.textContent = player.name;
+          if (player.id === selectedValue) { opt.selected = true; }
+          select.appendChild(opt);
+        });
+      });
+    }
+    function updatePackSelector() {
+      const select = document.getElementById("packSelect");
+      if (!select) return;
+      const selectedValue = select.value;
+      select.innerHTML = '<option value="">All Packs</option>';
+      appData.packs.forEach(pack => {
+        const opt = document.createElement("option");
+        opt.value = pack.id;
+        opt.textContent = pack.name;
+        if (pack.id === selectedValue) { opt.selected = true; }
+        select.appendChild(opt);
+      });
+    }
+    function updateFilterPackOptions() {
+      const select = document.getElementById("filterPack");
+      if (!select) return;
+      const selectedValue = select.value;
+      select.innerHTML = '<option value="">All</option>';
+      appData.packs.forEach(pack => {
+        const opt = document.createElement("option");
+        opt.value = pack.id;
+        opt.textContent = pack.name;
+        if (pack.id === selectedValue) { opt.selected = true; }
+        select.appendChild(opt);
+      });
+    }
+    function updateCombinePacksSelect() {
+      // If an element with id "combinePacksSelect" exists, update it.
+      const select = document.getElementById("combinePacksSelect");
+      if (!select) return;
+      const selectedValues = Array.from(select.selectedOptions).map(opt => opt.value);
+      select.innerHTML = "";
+      appData.packs.forEach(pack => {
+        const opt = document.createElement("option");
+        opt.value = pack.id;
+        opt.textContent = pack.name;
+        if (selectedValues.indexOf(pack.id) !== -1) { opt.selected = true; }
+        select.appendChild(opt);
+      });
+    }
+    function updateTopRankings() {
+      const container = document.getElementById("topRankingsList");
+      if (!container) return;
+      let sorted = [...appData.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+      sorted = sorted.slice(0, 3);
+      container.innerHTML = "";
+      sorted.forEach(player => {
+        const li = document.createElement("li");
+        li.textContent = `${player.name} - ${player.score} (${getRankForPlayer(player)})`;
+        li.style.color = getRankColor(getRankForPlayer(player));
+        container.appendChild(li);
+      });
+    }
+    function updateAllDisplays() {
+      updatePlayerDropdowns();
+      updatePlayerTable();
+      updateQuestionTable();
+      updateRankingTable();
+      updatePackTable();
+      updatePackSelector();
+      updateFilterPackOptions();
+      updateCombinePacksSelect();
+      updateTopRankings();
+      if(document.getElementById("adminTab").classList.contains("active-tab")){
+        updatePlayerTable();
+        updateQuestionTable();
+        updatePackTableAdmin();
+      }
+    }
+    function updatePlayerTable() {
+      const tbody = document.querySelector("#playerTable tbody");
+      tbody.innerHTML = "";
+      if (!appData.players.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="4">No players available.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      appData.players.forEach(player => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${player.id}</td>
+                        <td>${player.name}</td>
+                        <td>${player.score}</td>
+                        <td>
+                          <button onclick="editPlayer('${player.id}')">Edit</button>
+                          <button onclick="deletePlayer('${player.id}')">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function getRankForPlayer(player) {
+      const score = player.score || 0;
+      if (score < 5) return "Unranked";
+      if (score < 10) return "Iron";
+      if (score < 15) return "Bronze";
+      if (score < 25) return "Silver";
+      if (score < 40) return "Gold";
+      if (score < 70) return "Platinum";
+      if (score < 120) return "Diamond";
+      if (score < 180) return "Grandmaster";
+      if (score < 250) return "Celestial";
+      if (score <= 300) return "Eternity";
+      const high = appData.players.filter(p => (p.score || 0) >= 350);
+      if (!high.length) return "Eternity";
+      const maxScore = Math.max(...high.map(p => p.score || 0));
+      return (score === maxScore) ? "One Above All" : "Under the One Above All";
+    }
+    function getRankColor(rank) {
+      const colors = { "Unranked": "#808080", "Iron": "#b0b0b0", "Bronze": "#cd7f32", "Silver": "#c0c0c0",
+                       "Gold": "#ffd700", "Platinum": "#e5e4e2", "Diamond": "#b9f2ff", "Grandmaster": "#ff4500",
+                       "Celestial": "#00ffff", "Eternity": "#ff1493", "One Above All": "#ff0000", "Under the One Above All": "#ffa500" };
+      return colors[rank] || "#000000";
+    }
+    function updateRankingTable() {
+      const tbody = document.querySelector("#rankingTable tbody");
+      tbody.innerHTML = "";
+      if (!appData.players.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="4">No players available.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      const sorted = [...appData.players].sort((a, b) => b.score - a.score);
+      sorted.forEach((player, i) => {
+        const rank = getRankForPlayer(player);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${i + 1}</td>
+                        <td>${player.name}</td>
+                        <td>${player.score}</td>
+                        <td style="color:${getRankColor(rank)};">${rank}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function updateQuestionTable() {
+      let allQuestions = [];
+      appData.packs.forEach(pack => {
+        if (pack.questions && pack.questions.length) {
+          pack.questions.forEach(q => {
+            allQuestions.push({ ...q, packName: pack.name, packId: pack.id });
+          });
+        }
+      });
+      const tbody = document.querySelector("#questionTable tbody");
+      tbody.innerHTML = "";
+      if (!allQuestions.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6">No questions available.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      const search = document.getElementById("questionSearch").value.toLowerCase();
+      const typeFilter = document.getElementById("filterType").value.toLowerCase();
+      const catFilter = document.getElementById("filterCategory").value;
+      const packFilter = document.getElementById("filterPack").value;
+      const filtered = allQuestions.filter(q =>
+        q.text.toLowerCase().includes(search) &&
+        (typeFilter ? q.type.toLowerCase() === typeFilter : true) &&
+        (catFilter ? q.category === catFilter : true) &&
+        (packFilter ? q.packId === packFilter : true)
+      );
+      if (!filtered.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6">No matching questions found.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      filtered.forEach(q => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${q.id}</td>
+                        <td>${q.type}</td>
+                        <td>${q.category}</td>
+                        <td>${q.text}</td>
+                        <td>${q.packName}</td>
+                        <td>
+                          <button onclick="editQuestion('${q.id}')">Edit</button>
+                          <button onclick="deleteQuestion('${q.id}')">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function updatePackTable() {
+      const tbody = document.querySelector("#packTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!appData.packs.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="5">No packs available.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      appData.packs.forEach(pack => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${pack.id}</td>
+                        <td>${pack.name}</td>
+                        <td>${pack.description}</td>
+                        <td>${pack.questions ? pack.questions.length : 0}</td>
+                        <td>
+                          <button onclick="editPack('${pack.id}')">Edit</button>
+                          <button onclick="deletePack('${pack.id}')">Delete</button>
+                          <button onclick="managePackQuestions('${pack.id}')">Manage Questions</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function updatePackTableAdmin() {
+      const tbody = document.querySelector("#packTableAdmin tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!appData.packs.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="5">No packs available.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      appData.packs.forEach(pack => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${pack.id}</td>
+                        <td>${pack.name}</td>
+                        <td>${pack.description}</td>
+                        <td>${pack.questions ? pack.questions.length : 0}</td>
+                        <td>
+                          <button onclick="editPack('${pack.id}')">Edit</button>
+                          <button onclick="deletePack('${pack.id}')">Delete</button>
+                          <button onclick="managePackQuestions('${pack.id}')">Manage Questions</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    /***** Theme & Animation *****/
+    function applyThemeSettings() {
+      document.body.className = appData.themeSettings.mode + "-mode";
+      const bgAnimDiv = document.getElementById("bgAnimation");
+      bgAnimDiv.className = "";
+      if (appData.themeSettings.bgAnim && appData.themeSettings.bgAnim !== "none") {
+        bgAnimDiv.classList.add("bgAnim-" + appData.themeSettings.bgAnim);
+      }
+    }
+    /***** Game Logic *****/
+    function getRandomQuestion(playerId, type, difficulty, packId) {
+      let questions = [];
+      if (packId) {
+        const pack = appData.packs.find(p => p.id === packId);
+        if (pack && pack.questions) questions = pack.questions;
+      } else {
+        appData.packs.forEach(pack => { if(pack.questions) questions = questions.concat(pack.questions); });
+      }
+      const filtered = questions.filter(q =>
+        q.type.toLowerCase() === type.toLowerCase() &&
+        q.category.toLowerCase() === difficulty.toLowerCase()
+      );
+      if (filtered.length === 0) return null;
+      const player = appData.players.find(p => p.id === playerId);
+      if (!player) return null;
+      if (!player.questionHistory) player.questionHistory = {};
+      const history = player.questionHistory;
+      let totalWeight = 0;
+      const weights = filtered.map(q => {
+        const weight = 1 / ((history[q.id] || 0) + 1);
+        totalWeight += weight;
+        return weight;
+      });
+      let random = Math.random() * totalWeight;
+      for (let i = 0; i < filtered.length; i++) {
+        random -= weights[i];
+        if (random <= 0) {
+          history[filtered[i].id] = (history[filtered[i].id] || 0) + 1;
+          saveDataFile();
+          return filtered[i];
+        }
+      }
+      return filtered[filtered.length - 1];
+    }
+    function updatePlayerScore(playerId, delta) {
+      const idx = appData.players.findIndex(p => p.id === playerId);
+      if (idx !== -1) {
+        const player = appData.players[idx];
+        const oldRank = getRankForPlayer(player);
+        player.score = (player.score || 0) + delta;
+        const newRank = getRankForPlayer(player);
+        if (rankValue(newRank) > rankValue(oldRank)) {
+          showNotification("Congratulations " + player.name + " ranked up to " + newRank + "!");
+        } else if (rankValue(newRank) < rankValue(oldRank)) {
+          showNotification("Alert: " + player.name + " de‑ranked to " + newRank + ".");
+        }
+        saveDataFile();
+        updateAllDisplays();
+        showConfirmation(`Score updated for ${player.name}: ${player.score}`);
+      }
+    }
+    /***** Pack Management Functions (for Admin) *****/
+    function editPack(id) {
+      const pack = appData.packs.find(p => p.id === id);
+      if (!pack) return;
+      const newName = prompt("Enter new pack name:", pack.name);
+      if (!newName) return;
+      const newDesc = prompt("Enter new description:", pack.description);
+      pack.name = newName;
+      pack.description = newDesc;
+      saveDataFile();
+      updatePackTable();
+      updatePackSelector();
+      updateFilterPackOptions();
+      updatePackTableAdmin();
+    }
+    function deletePack(id) {
+      if (!confirm("Are you sure you want to delete this pack?")) return;
+      appData.packs = appData.packs.filter(p => p.id !== id);
+      saveDataFile();
+      updatePackTable();
+      updatePackSelector();
+      updateFilterPackOptions();
+      updatePackTableAdmin();
+    }
+    function managePackQuestions(packId) {
+      const pack = appData.packs.find(p => p.id === packId);
+      if (!pack) return;
+      const container = document.getElementById("packQuestionsContainer");
+      container.innerHTML = `<h4>Questions in Pack: ${pack.name}</h4>`;
+      const table = document.createElement("table");
+      table.innerHTML = `<thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Difficulty</th>
+                            <th>Question</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead><tbody></tbody>`;
+      const tbody = table.querySelector("tbody");
+      (pack.questions || []).forEach(q => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${q.id}</td>
+                        <td>${q.type}</td>
+                        <td>${q.category}</td>
+                        <td>${q.text}</td>
+                        <td>
+                          <button onclick="editPackQuestion('${packId}','${q.id}')">Edit</button>
+                          <button onclick="deletePackQuestion('${packId}','${q.id}')">Delete</button>
+                          <button onclick="movePackQuestion('${packId}','${q.id}')">Move</button>
+                          <button onclick="copyPackQuestion('${packId}','${q.id}')">Copy</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+      const addDiv = document.createElement("div");
+      addDiv.innerHTML = `<h4>Add New Question to ${pack.name}</h4>
+                          <label>Type:
+                            <select id="newPackQuestionType">
+                              <option value="truth">Truth</option>
+                              <option value="dare">Dare</option>
+                            </select>
+                          </label><br>
+                          <label>Difficulty:
+                            <select id="newPackQuestionCategory">
+                              <option value="Casual">Casual</option>
+                              <option value="Intermediate">Intermediate</option>
+                              <option value="Advanced">Advanced</option>
+                            </select>
+                          </label><br>
+                          <label>Question:</label><br>
+                          <textarea id="newPackQuestionText" rows="3"></textarea><br>
+                          <button onclick="addPackQuestion('${packId}')">Add Question</button>`;
+      container.innerHTML = "";
+      container.appendChild(table);
+      container.appendChild(addDiv);
+    }
+    function addPackQuestion(packId) {
+      const pack = appData.packs.find(p => p.id === packId);
+      if (!pack) return;
+      const type = document.getElementById("newPackQuestionType").value;
+      const category = document.getElementById("newPackQuestionCategory").value;
+      const text = document.getElementById("newPackQuestionText").value.trim();
+      if (!text) { alert("Please enter a question."); return; }
+      const newQ = { id: Date.now().toString(), type: type.toLowerCase(), category, text };
+      pack.questions.push(newQ);
+      saveDataFile();
+      managePackQuestions(packId);
+      updateQuestionTable();
+    }
+    function editPackQuestion(packId, qId) {
+      const pack = appData.packs.find(p => p.id === packId);
+      if (!pack) return;
+      const q = pack.questions.find(q => q.id === qId);
+      if (!q) return;
+      const newType = prompt("Enter new type (truth/dare):", q.type);
+      if (!newType) return;
+      const newCat = prompt("Enter new difficulty (Casual, Intermediate, Advanced):", q.category);
+      if (!newCat) return;
+      const newText = prompt("Enter new question text:", q.text);
+      if (!newText) return;
+      q.type = newType.toLowerCase();
+      q.category = newCat.charAt(0).toUpperCase() + newCat.slice(1).toLowerCase();
+      q.text = newText;
+      saveDataFile();
+      managePackQuestions(packId);
+      updateQuestionTable();
+    }
+    function deletePackQuestion(packId, qId) {
+      const pack = appData.packs.find(p => p.id === packId);
+      if (!pack) return;
+      if (!confirm("Are you sure you want to delete this question?")) return;
+      pack.questions = pack.questions.filter(q => q.id !== qId);
+      saveDataFile();
+      managePackQuestions(packId);
+      updateQuestionTable();
+    }
+    function movePackQuestion(srcPackId, qId) {
+      const targetId = prompt("Enter target pack ID:");
+      if (!targetId) return;
+      const srcPack = appData.packs.find(p => p.id === srcPackId);
+      const targetPack = appData.packs.find(p => p.id === targetId);
+      if (!srcPack || !targetPack) { alert("Invalid pack ID."); return; }
+      const idx = srcPack.questions.findIndex(q => q.id === qId);
+      if (idx === -1) return;
+      const [question] = srcPack.questions.splice(idx, 1);
+      targetPack.questions.push(question);
+      saveDataFile();
+      managePackQuestions(srcPackId);
+      updatePackTable();
+      updateQuestionTable();
+    }
+    function copyPackQuestion(srcPackId, qId) {
+      const targetId = prompt("Enter target pack ID:");
+      if (!targetId) return;
+      const srcPack = appData.packs.find(p => p.id === srcPackId);
+      const targetPack = appData.packs.find(p => p.id === targetId);
+      if (!srcPack || !targetPack) { alert("Invalid pack ID."); return; }
+      const question = srcPack.questions.find(q => q.id === qId);
+      if (!question) return;
+      const copyQ = { ...question, id: Date.now().toString() };
+      targetPack.questions.push(copyQ);
+      saveDataFile();
+      updatePackTable();
+      updateQuestionTable();
+    }
+    /***** Excel Import *****/
+    document.getElementById("importExcelBtn").addEventListener("click", function() {
+      const fileInput = document.getElementById("excelImport");
+      if (fileInput.files.length === 0) { alert("Please select an Excel file."); return; }
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        let startRow = 0;
+        if (rows[0] && rows[0][0] && rows[0][0].toString().toLowerCase().includes("question")) startRow = 1;
+        for (let i = startRow; i < rows.length; i++) {
+          const row = rows[i];
+          const qText = row[0], type = row[1], difficulty = row[2];
+          let packName = row[3] ? row[3].toString() : "Default";
+          if (!qText) continue;
+          let pack = appData.packs.find(p => p.name.toLowerCase() === packName.toLowerCase());
+          if (!pack) {
+            pack = { id: Date.now().toString() + i, name: packName, description: "", questions: [] };
+            appData.packs.push(pack);
+          }
+          const newQ = { id: Date.now().toString() + i, type: type.toLowerCase(), category: difficulty, text: qText };
+          pack.questions.push(newQ);
+        }
+        saveDataFile();
+        updatePackTable();
+        updateQuestionTable();
+        updatePackSelector();
+        updateFilterPackOptions();
+        updateCombinePacksSelect();
+        alert("Excel import complete.");
+      };
+      reader.readAsArrayBuffer(file);
+    });
+    /***** Update Logs Rendering *****/
+    function renderUpdateGrid() {
+      const container = document.getElementById("updateLogsContainer");
+      container.innerHTML = "";
+      const gridDiv = document.createElement("div");
+      gridDiv.className = "update-buttons-container";
+      const groups = ["v7", "v6", "v5", "v4", "v3", "v2", "v1"];
+      groups.forEach(group => {
+        const btn = document.createElement("div");
+        btn.className = "update-button update-" + group;
+        btn.innerHTML = `<h3>${group.toUpperCase()}</h3>`;
+        btn.onclick = () => { renderMajorGroup(group); };
+        gridDiv.appendChild(btn);
+      });
+      container.appendChild(gridDiv);
+    }
+    function renderMajorGroup(group) {
+      const container = document.getElementById("updateLogsContainer");
+      container.innerHTML = "";
+      const groupData = updateLogsData[group];
+      if (!groupData) { container.innerHTML = "<p>No updates available.</p>"; return; }
+      groupData.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "update-detail";
+        div.style.backgroundColor = item.color;
+        div.style.color = "black";
+        div.style.padding = "10px";
+        div.style.margin = "10px 0";
+        div.innerHTML = `<h3>${item.version}</h3><p>${item.text}</p>`;
+        container.appendChild(div);
+      });
+      const backBtn = document.createElement("button");
+      backBtn.textContent = "Back to Major Updates";
+      backBtn.onclick = renderUpdateGrid;
+      container.appendChild(backBtn);
+    }
+    /***** Update Logs Edit Mode *****/
+    document.getElementById("editUpdatesBtn").addEventListener("click", function() {
+      const pwd = prompt("Enter password to edit updates:");
+      if (!pwd) return;
+      if (pwd === updatePassword) {
+        document.getElementById("updateEditSection").style.display = "block";
+        document.getElementById("updateEditTextarea").value = convertUpdateLogsToText();
+      } else {
+        alert("Incorrect password.");
+      }
+    });
+    document.getElementById("saveUpdatesBtn").addEventListener("click", function() {
+      try {
+        const newText = document.getElementById("updateEditTextarea").value;
+        const newData = parseUpdateLogsText(newText);
+        updateLogsData = newData;
+        document.getElementById("updateEditSection").style.display = "none";
+        renderUpdateGrid();
+        alert("Updates saved.");
+      } catch (e) {
+        alert("Invalid update logs format.");
+      }
+    });
+    document.getElementById("cancelUpdatesBtn").addEventListener("click", function() {
+      document.getElementById("updateEditSection").style.display = "none";
+    });
+    /***** Edit & Delete Helpers *****/
+    function editQuestion(id) {
+      for (let pack of appData.packs) {
+        const idx = pack.questions.findIndex(q => q.id === id);
+        if (idx !== -1) {
+          const q = pack.questions[idx];
+          const newType = prompt("Enter new type (truth/dare):", q.type);
+          if (!newType) return;
+          const newCat = prompt("Enter new difficulty (Casual, Intermediate, Advanced):", q.category);
+          if (!newCat) return;
+          const newText = prompt("Enter new question text:", q.text);
+          if (!newText) return;
+          q.type = newType.toLowerCase();
+          q.category = newCat.charAt(0).toUpperCase() + newCat.slice(1).toLowerCase();
+          q.text = newText;
+          saveDataFile();
+          updateQuestionTable();
+          return;
+        }
+      }
+    }
+    function deleteQuestion(id) {
+      if (!confirm("Are you sure you want to delete this question?")) return;
+      appData.packs.forEach(pack => { pack.questions = pack.questions.filter(q => q.id !== id); });
+      saveDataFile();
+      updateQuestionTable();
+      updatePackTable();
+    }
+    function editPlayer(id) {
+      const idx = appData.players.findIndex(p => p.id === id);
+      if (idx === -1) return;
+      const newName = prompt("Enter new name:", appData.players[idx].name);
+      if (!newName) return;
+      appData.players[idx].name = newName;
+      saveDataFile();
+      updateAllDisplays();
+    }
+    function deletePlayer(id) {
+      if (!confirm("Are you sure you want to delete this player?")) return;
+      appData.players = appData.players.filter(p => p.id !== id);
+      saveDataFile();
+      updateAllDisplays();
+    }
+    /***** Event Handlers *****/
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("loadDataBtn").addEventListener("click", loadDataFile);
+      document.getElementById("saveDataBtn").addEventListener("click", saveDataFile);
+      document.getElementById("helpBtn").addEventListener("click", function() {
+        const helpMsg = document.getElementById("helpMessage");
+        helpMsg.style.display = (helpMsg.style.display === "none" || helpMsg.style.display === "") ? "block" : "none";
+      });
+      // If no data exists, use sample data
+      if (appData.players.length === 0 && appData.packs.length === 0) {
+        appData.players = [
+          { id: "1", name: "Alice", score: 0, questionHistory: {} },
+          { id: "2", name: "Bob", score: 0, questionHistory: {} }
+        ];
+        appData.packs = [
+          { id: "default", name: "Default", description: "Default pack", questions: [
+              { id: "q1", type: "truth", category: "Casual", text: "What is your favorite color?" },
+              { id: "q2", type: "dare", category: "Intermediate", text: "Do 10 push-ups." }
+          ] }
+        ];
+        if(dataFileHandle) { saveDataFile(); }
+      }
+      updateAllDisplays();
+      applyThemeSettings();
+      renderUpdateGrid();
+      // Main Tab events
+      document.getElementById("getQuestionBtn").addEventListener("click", function() {
+        const playerId = document.getElementById("currentPlayerSelect").value;
+        if (!playerId) { alert("Please add/select a player first!"); return; }
+        const type = document.querySelector('input[name="tdType"]:checked').value;
+        let level = document.getElementById("levelSelect").value;
+        if (level === "Random") {
+          const r = Math.random();
+          level = r < 0.5 ? "Casual" : (r < 0.85 ? "Intermediate" : "Advanced");
+        }
+        const packId = document.getElementById("packSelect").value;
+        const question = getRandomQuestion(playerId, type, level, packId);
+        const disp = document.getElementById("questionDisplay");
+        if (question) {
+          disp.textContent = question.text;
+          disp.dataset.level = level;
+          disp.dataset.type = question.type;
+          document.getElementById("responseButtons").style.display = "block";
+        } else {
+          disp.textContent = "No questions available for the selected options.";
+          document.getElementById("responseButtons").style.display = "none";
+        }
+      });
+      document.getElementById("completedBtn").addEventListener("click", function() {
+        const level = document.getElementById("questionDisplay").dataset.level;
+        const qType = document.getElementById("questionDisplay").dataset.type;
+        let addPts = (qType === "truth") ? (level==="Casual"?0.5:level==="Intermediate"?1:1.5) :
+                     (level==="Casual"?2:level==="Intermediate"?3:4);
+        const playerId = document.getElementById("currentPlayerSelect").value;
+        updatePlayerScore(playerId, addPts);
+        document.getElementById("questionDisplay").textContent = "";
+        document.getElementById("responseButtons").style.display = "none";
+      });
+      document.getElementById("notCompletedBtn").addEventListener("click", function() {
+        const level = document.getElementById("questionDisplay").dataset.level;
+        const qType = document.getElementById("questionDisplay").dataset.type;
+        let subPts = (qType === "truth") ? (level==="Casual"?-4:level==="Intermediate"?-3:-2) :
+                     (level==="Casual"?-1.5:level==="Intermediate"?-1:-0.5);
+        const playerId = document.getElementById("currentPlayerSelect").value;
+        updatePlayerScore(playerId, subPts);
+        document.getElementById("questionDisplay").textContent = "";
+        document.getElementById("responseButtons").style.display = "none";
+      });
+      document.getElementById("skipBtn").addEventListener("click", function() {
+        document.getElementById("questionDisplay").textContent = "";
+        document.getElementById("responseButtons").style.display = "none";
+      });
+      document.getElementById("addScoreBtn").addEventListener("click", function() {
+        const playerId = document.getElementById("adjustPlayerSelect").value;
+        const adj = parseFloat(document.getElementById("scoreAdjustment").value) || 0;
+        updatePlayerScore(playerId, adj);
+      });
+      document.getElementById("subtractScoreBtn").addEventListener("click", function() {
+        const playerId = document.getElementById("adjustPlayerSelect").value;
+        const adj = parseFloat(document.getElementById("scoreAdjustment").value) || 0;
+        updatePlayerScore(playerId, -adj);
+      });
+      document.getElementById("addQuestionBtn").addEventListener("click", function() {
+        const type = document.querySelector('input[name="newQuestionType"]:checked').value;
+        const category = document.getElementById("newQuestionCategory").value;
+        const text = document.getElementById("newQuestionText").value.trim();
+        if (!text) { alert("Please enter a question."); return; }
+        let defaultPack = appData.packs.find(p => p.name.toLowerCase() === "default");
+        if (!defaultPack) {
+          defaultPack = { id: "default", name: "Default", description: "Default pack", questions: [] };
+          appData.packs.push(defaultPack);
+        }
+        const newQ = { id: Date.now().toString(), type: type.toLowerCase(), category, text };
+        defaultPack.questions.push(newQ);
+        saveDataFile();
+        document.getElementById("newQuestionText").value = "";
+        updateQuestionTable();
+        updatePackTable();
+        updatePackSelector();
+        updateFilterPackOptions();
+      });
+      document.getElementById("addPlayerBtn").addEventListener("click", function() {
+        const name = document.getElementById("newPlayerName").value.trim();
+        if (!name) { alert("Please enter a name."); return; }
+        const newPlayer = { id: Date.now().toString(), name, score: 0, questionHistory: {} };
+        appData.players.push(newPlayer);
+        saveDataFile();
+        document.getElementById("newPlayerName").value = "";
+        updateAllDisplays();
+      });
+      document.getElementById("addPackBtnAdmin").addEventListener("click", function() {
+        const name = document.getElementById("newPackNameAdmin").value.trim();
+        const desc = document.getElementById("newPackDescriptionAdmin").value.trim();
+        if (!name) { alert("Please enter a pack name."); return; }
+        const newPack = { id: Date.now().toString(), name, description: desc, questions: [] };
+        appData.packs.push(newPack);
+        saveDataFile();
+        document.getElementById("newPackNameAdmin").value = "";
+        document.getElementById("newPackDescriptionAdmin").value = "";
+        updatePackTableAdmin();
+        updatePackSelector();
+        updateFilterPackOptions();
+      });
+      Array.from(document.getElementsByName("themeMode")).forEach(radio => {
+        radio.addEventListener("change", function() {
+          appData.themeSettings.mode = this.value;
+          saveDataFile();
+          applyThemeSettings();
+        });
+      });
+      Array.from(document.getElementsByName("bgAnim")).forEach(radio => {
+        radio.addEventListener("change", function() {
+          appData.themeSettings.bgAnim = this.value;
+          saveDataFile();
+          applyThemeSettings();
+        });
+      });
+      document.getElementById("filterBtn").addEventListener("click", updateQuestionTable);
+      document.getElementById("questionSearch").addEventListener("input", updateQuestionTable);
+      updateCombinePacksSelect();
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
